@@ -1,11 +1,9 @@
-package controllers
+package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"library_management/models"
 	"library_management/services"
-	"net/http"
 	"strconv"
 )
 
@@ -15,174 +13,132 @@ var (
 	nextMemberID int              = 1
 )
 
-func decode[T any](r *http.Request) (T, error) {
-	var v T
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		return v, fmt.Errorf("decode json: %v", err)
+func main() {
+	for {
+		fmt.Println("Choose an option:")
+		fmt.Println("1. Add Book")
+		fmt.Println("2. Get Books")
+		fmt.Println("3. Get Available Books")
+		fmt.Println("4. Get Borrowed Books")
+		fmt.Println("5. Add Member")
+		fmt.Println("6. Get Members")
+		fmt.Println("7. Borrow Book")
+		fmt.Println("8. Return Book")
+		fmt.Println("9. Exit")
+
+		var choice int
+		fmt.Scanln(&choice)
+
+		switch choice {
+		case 1:
+			addBook()
+		case 2:
+			getBooks()
+		case 3:
+			getAvailableBooks()
+		case 4:
+			getBorrowedBooks()
+		case 5:
+			addMember()
+		case 6:
+			getMembers()
+		case 7:
+			borrowBook()
+		case 8:
+			returnBook()
+		case 9:
+			fmt.Println("Exiting...")
+			return
+		default:
+			fmt.Println("Invalid option, please try again.")
+		}
 	}
-	return v, nil
 }
 
-func encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		return fmt.Errorf("encode json: %v", err)
-	}
-	return nil
-}
+func addBook() {
+	var title, author string
+	fmt.Print("Enter book title: ")
+	fmt.Scanln(&title)
+	fmt.Print("Enter book author: ")
+	fmt.Scanln(&author)
 
-func AddBook(w http.ResponseWriter, r *http.Request) {
-	b, err := decode[models.Book](r)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	b.ID = nextBookID
+	b := models.Book{ID: nextBookID, Title: title, Author: author}
 	L.AddBook(b)
-	encode(w, r, http.StatusCreated, L.Books[b.ID])
+	fmt.Printf("Book added with ID %d\n", nextBookID)
 	nextBookID++
 }
 
-func GetBooks(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		encode(w, r, http.StatusOK, L.Books)
-		return
+func getBooks() {
+	fmt.Println("List of books:")
+	for id, book := range L.Books {
+		fmt.Printf("ID: %d, Title: %s, Author: %s\n", id, book.Title, book.Author)
 	}
-	intId, err := strconv.Atoi(id)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	b, ok := L.Books[intId]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	encode(w, r, http.StatusOK, b)
 }
 
-func GetAvailableBooks(w http.ResponseWriter, r *http.Request) {
-	b := L.ListAvailableBooks()
-	encode(w, r, http.StatusOK, b)
+func getAvailableBooks() {
+	fmt.Println("List of available books:")
+	availableBooks := L.ListAvailableBooks()
+	for _, book := range availableBooks {
+		fmt.Printf("ID: %d, Title: %s, Author: %s\n", book.ID, book.Title, book.Author)
+	}
 }
 
-func GetBorrowedBooks(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("memberID")
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(err.Error()))
-		return
+func getBorrowedBooks() {
+	var memberID int
+	fmt.Print("Enter member ID: ")
+	fmt.Scanln(&memberID)
+
+	borrowedBooks := L.ListBorrowedBooks(memberID)
+	fmt.Printf("List of books borrowed by member %d:\n", memberID)
+	for _, book := range borrowedBooks {
+		fmt.Printf("ID: %d, Title: %s, Author: %s\n", book.ID, book.Title, book.Author)
 	}
-	b := L.ListBorrowedBooks(intID)
-	encode(w, r, http.StatusOK, b)
 }
 
-func GetMembers(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		encode(w, r, http.StatusOK, L.Members)
-		return
-	}
-	intId, err := strconv.Atoi(id)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	m, ok := L.Members[intId]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	encode(w, r, http.StatusOK, m)
-}
+func addMember() {
+	var name string
+	fmt.Print("Enter member name: ")
+	fmt.Scanln(&name)
 
-func AddMember(w http.ResponseWriter, r *http.Request) {
-	m, err := decode[models.Member](r)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	m.ID = nextMemberID
+	m := models.Member{ID: nextMemberID, Name: name}
 	L.AddMember(m)
-	encode(w, r, http.StatusCreated, m)
+	fmt.Printf("Member added with ID %d\n", nextMemberID)
 	nextMemberID++
 }
 
-func BorrowBook(w http.ResponseWriter, r *http.Request) {
-	bookID := r.PathValue("bookID")
-	memberID := r.PathValue("memberID")
-	if bookID == "" || memberID == "" {
-		w.Write([]byte("404 Not Found"))
-		return
+func getMembers() {
+	fmt.Println("List of members:")
+	for id, member := range L.Members {
+		fmt.Printf("ID: %d, Name: %s\n", id, member.Name)
 	}
-	intMemberID, err := strconv.Atoi(memberID)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	intBookID, err := strconv.Atoi(bookID)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	_, ok := L.Members[intMemberID]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	_, ok = L.Books[intBookID]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	if err = L.BorrowBook(intBookID, intMemberID); err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	m, _ := L.Members[intMemberID]
-	encode(w, r, http.StatusOK, m)
 }
 
-func ReturnBook(w http.ResponseWriter, r *http.Request) {
-	bookID := r.PathValue("bookID")
-	memberID := r.PathValue("memberID")
-	if bookID == "" || memberID == "" {
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	intMemberID, err := strconv.Atoi(memberID)
+func borrowBook() {
+	var bookID, memberID int
+	fmt.Print("Enter book ID: ")
+	fmt.Scanln(&bookID)
+	fmt.Print("Enter member ID: ")
+	fmt.Scanln(&memberID)
+
+	err := L.BorrowBook(bookID, memberID)
 	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
+		fmt.Println(err)
+	} else {
+		fmt.Println("Book borrowed successfully.")
 	}
-	intBookID, err := strconv.Atoi(bookID)
+}
+
+func returnBook() {
+	var bookID, memberID int
+	fmt.Print("Enter book ID: ")
+	fmt.Scanln(&bookID)
+	fmt.Print("Enter member ID: ")
+	fmt.Scanln(&memberID)
+
+	err := L.ReturnBook(bookID, memberID)
 	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
+		fmt.Println(err)
+	} else {
+		fmt.Println("Book returned successfully.")
 	}
-	_, ok := L.Members[intMemberID]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	_, ok = L.Books[intBookID]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
-		return
-	}
-	if err = L.ReturnBook(intBookID, intMemberID); err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	m, _ := L.Members[intMemberID]
-	encode(w, r, http.StatusOK, m)
 }
