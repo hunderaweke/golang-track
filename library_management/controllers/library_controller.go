@@ -1,10 +1,12 @@
-package main
+package controllers
 
 import (
+	"bufio"
 	"fmt"
 	"library_management/models"
 	"library_management/services"
-	"strconv"
+	"os"
+	"strings"
 )
 
 var (
@@ -13,69 +15,29 @@ var (
 	nextMemberID int              = 1
 )
 
-func main() {
-	for {
-		fmt.Println("Choose an option:")
-		fmt.Println("1. Add Book")
-		fmt.Println("2. Get Books")
-		fmt.Println("3. Get Available Books")
-		fmt.Println("4. Get Borrowed Books")
-		fmt.Println("5. Add Member")
-		fmt.Println("6. Get Members")
-		fmt.Println("7. Borrow Book")
-		fmt.Println("8. Return Book")
-		fmt.Println("9. Exit")
-
-		var choice int
-		fmt.Scanln(&choice)
-
-		switch choice {
-		case 1:
-			addBook()
-		case 2:
-			getBooks()
-		case 3:
-			getAvailableBooks()
-		case 4:
-			getBorrowedBooks()
-		case 5:
-			addMember()
-		case 6:
-			getMembers()
-		case 7:
-			borrowBook()
-		case 8:
-			returnBook()
-		case 9:
-			fmt.Println("Exiting...")
-			return
-		default:
-			fmt.Println("Invalid option, please try again.")
-		}
-	}
-}
-
-func addBook() {
+func AddBook() {
 	var title, author string
+	r := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter book title: ")
-	fmt.Scanln(&title)
+	title, _ = r.ReadString('\n')
+	title = strings.Trim(title, "\n")
 	fmt.Print("Enter book author: ")
-	fmt.Scanln(&author)
-
+	author, _ = r.ReadString('\n')
+	author = strings.Trim(author, "\n")
 	b := models.Book{ID: nextBookID, Title: title, Author: author}
 	L.AddBook(b)
 	fmt.Printf("Book added with ID %d\n", nextBookID)
 	nextBookID++
 }
 
-func getBooks() {
+func GetBooks() {
 	fmt.Println("List of books:")
 	for id, book := range L.Books {
 		fmt.Printf("ID: %d, Title: %s, Author: %s\n", id, book.Title, book.Author)
 	}
 }
 
-func getAvailableBooks() {
+func GetAvailableBooks() {
 	fmt.Println("List of available books:")
 	availableBooks := L.ListAvailableBooks()
 	for _, book := range availableBooks {
@@ -83,7 +45,7 @@ func getAvailableBooks() {
 	}
 }
 
-func getBorrowedBooks() {
+func GetBorrowedBooks() {
 	var memberID int
 	fmt.Print("Enter member ID: ")
 	fmt.Scanln(&memberID)
@@ -95,25 +57,26 @@ func getBorrowedBooks() {
 	}
 }
 
-func addMember() {
+func AddMember() {
 	var name string
+	r := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter member name: ")
-	fmt.Scanln(&name)
-
+	name, _ = r.ReadString('\n')
+	name = strings.Trim(name, "\n")
 	m := models.Member{ID: nextMemberID, Name: name}
 	L.AddMember(m)
 	fmt.Printf("Member added with ID %d\n", nextMemberID)
 	nextMemberID++
 }
 
-func getMembers() {
+func GetMembers() {
 	fmt.Println("List of members:")
 	for id, member := range L.Members {
 		fmt.Printf("ID: %d, Name: %s\n", id, member.Name)
 	}
 }
 
-func borrowBook() {
+func BorrowBook() {
 	var bookID, memberID int
 	fmt.Print("Enter book ID: ")
 	fmt.Scanln(&bookID)
@@ -128,7 +91,7 @@ func borrowBook() {
 	}
 }
 
-func returnBook() {
+func ReturnBook() {
 	var bookID, memberID int
 	fmt.Print("Enter book ID: ")
 	fmt.Scanln(&bookID)
