@@ -15,6 +15,8 @@ type UserService struct {
 	Count      int
 }
 
+type UserTasks []models.Task
+
 func NewUserService(db *mongo.Database) *UserService {
 	c := db.Collection("users")
 	cnt, _ := c.CountDocuments(context.Background(), bson.D{{}}, options.Count())
@@ -43,6 +45,17 @@ func (u *UserService) GetUserByID(userID string) (*models.User, error) {
 	opts := options.FindOne()
 	user := models.User{}
 	res := u.collection.FindOne(context.TODO(), bson.D{{"id", userID}}, opts)
+	err := res.Decode(&user)
+	if err != nil {
+		return &user, err
+	}
+	return &user, nil
+}
+
+func (u *UserService) GetByEmail(email string) (*models.User, error) {
+	opts := options.FindOne()
+	user := models.User{}
+	res := u.collection.FindOne(context.TODO(), bson.D{{"email", email}}, opts)
 	err := res.Decode(&user)
 	if err != nil {
 		return &user, err

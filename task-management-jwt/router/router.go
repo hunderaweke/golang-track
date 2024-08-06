@@ -21,4 +21,5 @@ func AddUserRouter(r *gin.Engine, db *mongo.Database) {
 	u := controllers.NewUserController(db)
 	r.GET("/users/", u.GetUsers)
 	r.POST("/register", u.Create)
+	r.POST("/login", u.Login)
 }

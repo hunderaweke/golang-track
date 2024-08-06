@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 	"task-management-api-mongodb/data"
 	"task-management-api-mongodb/models"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -81,8 +83,38 @@ func (u *UserController) Create(c *gin.Context) {
 	user.Password = string(hashedPassword)
 	_, err = u.userService.Create(&user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, user)
+}
+
+func (u *UserController) Login(c *gin.Context) {
+	var user models.User
+	err := c.Bind(&user)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	exsitingUser, err := u.userService.GetByEmail(user.Email)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	if bcrypt.CompareHashAndPassword([]byte(exsitingUser.Password), []byte(user.Password)) != nil {
+		c.JSON(500, gin.H{"error": "invalid password or email"})
+		return
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": exsitingUser.ID,
+		"email":   exsitingUser.Email,
+		"name":    exsitingUser.Name,
+	})
+	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtToken, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal server error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken})
 }
