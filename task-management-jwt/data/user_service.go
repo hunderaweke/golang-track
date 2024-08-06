@@ -15,14 +15,6 @@ type UserService struct {
 	Count      int
 }
 
-type UserTasks []models.Task
-
-func (u *UserTasks) getTaskByID(id string) (*models.Task, error) {
-	var task models.Task
-	for _,t := range u{
-		if t.ID 
-	}
-}
 func NewUserService(db *mongo.Database) *UserService {
 	c := db.Collection("users")
 	cnt, _ := c.CountDocuments(context.Background(), bson.D{{}}, options.Count())

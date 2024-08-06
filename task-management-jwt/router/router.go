@@ -20,4 +20,5 @@ func AddTaskRouter(r *gin.Engine, db *mongo.Database) {
 func AddUserRouter(r *gin.Engine, db *mongo.Database) {
 	u := controllers.NewUserController(db)
 	r.GET("/users/", u.GetUsers)
+	r.POST("/register", u.Create)
 }
