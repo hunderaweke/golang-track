@@ -27,6 +27,9 @@ func AddUserRouter(r *gin.Engine, db *mongo.Database) {
 	admin := r.Use(middlewares.JWTMiddleware())
 	{
 		admin.GET("/users/", middlewares.AdminMiddleware(), u.GetUsers)
+		admin.GET("/users/:id", u.GetUserByID)
+		admin.PUT("/user/:id", u.UpdateUser)
+		admin.DELETE("/users/:id", middlewares.AdminMiddleware(), u.DeleteUser)
 	}
 	r.POST("/register", u.Create)
 	r.POST("/login", u.Login)

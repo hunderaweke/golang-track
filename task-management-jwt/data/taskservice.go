@@ -45,15 +45,17 @@ func (t *TasksService) GetTasks() ([]models.Task, error) {
 	return tasks, nil
 }
 
-func (t *TasksService) GetTaskByID(taskID string) (models.Task, error) {
-	filter := bson.D{{"id", taskID}}
-	opts := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 0}})
-	res := t.collection.FindOne(context.Background(), filter, opts)
-	var task models.Task
-	if err := res.Decode(&task); err != nil {
-		return task, err
+func (t *TasksService) GetTaskByID(userID, taskID string) (models.Task, error) {
+	tasks, err := t.GetTaskByUserID(userID)
+	if err != nil {
+		return models.Task{}, err
 	}
-	return task, nil
+	for _, t := range tasks {
+		if t.ID == taskID {
+			return t, nil
+		}
+	}
+	return models.Task{}, fmt.Errorf("the task doesn't belong to the current user")
 }
 
 func (t *TasksService) GetTaskByUserID(userID string) ([]models.Task, error) {
@@ -77,8 +79,8 @@ func (t *TasksService) AddTask(task models.Task) error {
 	return err
 }
 
-func (t *TasksService) UpdateTask(taskID string, data models.Task) (models.Task, error) {
-	task, err := t.GetTaskByID(taskID)
+func (t *TasksService) UpdateTask(userID, taskID string, data models.Task) (models.Task, error) {
+	task, err := t.GetTaskByID(userID, taskID)
 	if err != nil {
 		return task, err
 	}

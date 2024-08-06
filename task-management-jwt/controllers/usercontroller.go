@@ -45,6 +45,11 @@ func (u *UserController) GetUserByID(c *gin.Context) {
 func (u *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	user := models.User{}
+	userClaims := getUserClaims(c)
+	if userClaims.UserID != id || !userClaims.IsAdmin {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "method not allowed"})
+		return
+	}
 	if err := c.Bind(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -59,6 +64,11 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 
 func (u *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
+	userClaims := getUserClaims(c)
+	if userClaims.UserID != id || !userClaims.IsAdmin {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "method not allowed"})
+		return
+	}
 	if err := u.userService.DeleteUser(id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -117,5 +127,5 @@ func (u *UserController) Login(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken})
+	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken, "user": exsitingUser})
 }

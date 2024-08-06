@@ -31,7 +31,13 @@ func getUserClaims(c *gin.Context) middlewares.UserClaims {
 
 func (t *TaskController) GetTasks(c *gin.Context) {
 	userClaims := getUserClaims(c)
-	tasks, err := t.taskService.GetTaskByUserID(userClaims.UserID)
+	var tasks []models.Task
+	var err error
+	if !userClaims.IsAdmin {
+		tasks, err = t.taskService.GetTaskByUserID(userClaims.UserID)
+	} else {
+		tasks, err = t.taskService.GetTasks()
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
@@ -40,7 +46,8 @@ func (t *TaskController) GetTasks(c *gin.Context) {
 
 func (t *TaskController) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
-	task, err := t.taskService.GetTaskByID(id)
+	userClaims := getUserClaims(c)
+	task, err := t.taskService.GetTaskByID(userClaims.UserID, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -50,13 +57,14 @@ func (t *TaskController) GetTaskByID(c *gin.Context) {
 
 func (t *TaskController) UpdateTask(c *gin.Context) {
 	id := c.Param("id")
+	userClaims := getUserClaims(c)
 	var updatedTask models.Task
 	err := c.BindJSON(&updatedTask)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	task, err := t.taskService.UpdateTask(id, updatedTask)
+	task, err := t.taskService.UpdateTask(userClaims.UserID, id, updatedTask)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -66,7 +74,8 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 
 func (t *TaskController) DeleteTask(c *gin.Context) {
 	id := c.Param("id")
-	_, err := t.taskService.GetTaskByID(id)
+	userClaims := getUserClaims(c)
+	_, err := t.taskService.GetTaskByID(userClaims.UserID, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": data.TaskNotFoundError})
 		return
