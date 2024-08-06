@@ -9,10 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type customClaims struct {
-	Name   string
-	Email  string
-	UsedID string
+type UserClaims struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	UserID  string `json:"user_id"`
+	IsAdmin bool   `json:"is_admin"`
 	jwt.StandardClaims
 }
 
@@ -30,7 +31,7 @@ func JWTMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		claims := &customClaims{}
+		claims := &UserClaims{}
 		jwtKey := []byte(os.Getenv("JWT_SECRET"))
 		token, err := jwt.ParseWithClaims(authParts[1], claims, func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
@@ -41,6 +42,24 @@ func JWTMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Set("claims", claims)
+		c.Next()
+	}
+}
+
+func AdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, exists := c.Get("claims")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization is needed"})
+			c.Abort()
+			return
+		}
+		userClaims := claims.(*UserClaims)
+		if !userClaims.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "admin access needed"})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

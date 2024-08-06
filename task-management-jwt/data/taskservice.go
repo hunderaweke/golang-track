@@ -56,15 +56,20 @@ func (t *TasksService) GetTaskByID(taskID string) (models.Task, error) {
 	return task, nil
 }
 
-func (t *TasksService) GetTaskByUserID(userID string) (models.Task, error) {
+func (t *TasksService) GetTaskByUserID(userID string) ([]models.Task, error) {
 	filter := bson.D{{"user_id", userID}}
-	opts := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 0}})
-	res := t.collection.FindOne(context.Background(), filter, opts)
-	var task models.Task
-	if err := res.Decode(&task); err != nil {
-		return task, err
+	opts := options.Find()
+	cursor, err := t.collection.Find(context.Background(), filter, opts)
+	var tasks []models.Task
+	if err != nil {
+		return tasks, err
 	}
-	return task, nil
+	for cursor.Next(context.TODO()) {
+		var task models.Task
+		cursor.Decode(&task)
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
 }
 
 func (t *TasksService) AddTask(task models.Task) error {

@@ -24,7 +24,10 @@ func AddTaskRouter(r *gin.Engine, db *mongo.Database) {
 
 func AddUserRouter(r *gin.Engine, db *mongo.Database) {
 	u := controllers.NewUserController(db)
-	r.GET("/users/", u.GetUsers)
+	admin := r.Use(middlewares.JWTMiddleware())
+	{
+		admin.GET("/users/", middlewares.AdminMiddleware(), u.GetUsers)
+	}
 	r.POST("/register", u.Create)
 	r.POST("/login", u.Login)
 }

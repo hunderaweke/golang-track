@@ -4,7 +4,7 @@ import "time"
 
 type Task struct {
 	ID          string    `json:"id"`
-	UserID      string    `json:"-"`
+	UserID      string    `bson:"user_id" json:"user_id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	DueDate     time.Time `json:"due_date"`

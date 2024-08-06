@@ -19,6 +19,13 @@ type UserTasks []models.Task
 
 func NewUserService(db *mongo.Database) *UserService {
 	c := db.Collection("users")
+	emailIndexModel := mongo.IndexModel{
+		Keys: bson.M{
+			"email": 1,
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	c.Indexes().CreateOne(context.TODO(), emailIndexModel)
 	cnt, _ := c.CountDocuments(context.Background(), bson.D{{}}, options.Count())
 	return &UserService{collection: c, Count: int(cnt)}
 }

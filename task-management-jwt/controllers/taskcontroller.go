@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"task-management-api-mongodb/data"
+	"task-management-api-mongodb/middlewares"
 	"task-management-api-mongodb/models"
 	"time"
 
@@ -22,8 +23,15 @@ func NewTaskController(c context.Context, db *mongo.Database) *TaskController {
 	return &TaskController{taskService: *taskService, nextID: taskService.Count + 1}
 }
 
+func getUserClaims(c *gin.Context) middlewares.UserClaims {
+	claims, _ := c.Get("claims")
+	userClaims := claims.(*middlewares.UserClaims)
+	return *userClaims
+}
+
 func (t *TaskController) GetTasks(c *gin.Context) {
-	tasks, err := t.taskService.GetTasks()
+	userClaims := getUserClaims(c)
+	tasks, err := t.taskService.GetTaskByUserID(userClaims.UserID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
@@ -69,6 +77,7 @@ func (t *TaskController) DeleteTask(c *gin.Context) {
 
 func (t *TaskController) CreateTask(c *gin.Context) {
 	var task models.Task
+	userClaims := getUserClaims(c)
 	if err := c.ShouldBind(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -77,6 +86,7 @@ func (t *TaskController) CreateTask(c *gin.Context) {
 		task.DueDate = time.Now()
 	}
 	task.ID = strconv.Itoa(t.nextID)
+	task.UserID = userClaims.UserID
 	t.nextID++
 	err := t.taskService.AddTask(task)
 	if err != nil {
