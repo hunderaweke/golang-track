@@ -7,7 +7,7 @@ import (
 	"task-management-api-mongodb/data"
 	"task-management-api-mongodb/models"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
