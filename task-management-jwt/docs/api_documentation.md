@@ -1,185 +1,207 @@
-# Task Management API Documentation
+## API Documentation
 
-***NOTE:*** Since it uses mongodb for storage be sure to **export** `MONGODB_URL` in your `.env` file
+### Task Management Endpoints
 
-```shell
-export MONGODB_URL="<your_mongodb_url>"
-```
-
-## Base URL
-```
-http://localhost:7070
-```
-
-## Endpoints
-
-### Get All Tasks
-**Endpoint**: `/tasks/`  
-**Method**: `GET`  
-**Description**: Retrieves a list of all tasks.
-
-**Request**:
-```http
-GET /tasks/
-```
-
-**Response**:
-```json
-{
-  "tasks": {
-    "1": {
-      "id": "1",
-      "title": "Complete Go project",
-      "description": "Finish the distributed system project in Go",
-      "due_date": "2023-08-07T12:34:56Z",
+#### Create a New Task
+- **Endpoint:** `POST /tasks/`
+- **Description:** Creates a new task.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Request Body:** 
+  ```json
+  {
+    "title": "Task Title",
+    "description": "Task Description",
+    "dueDate": "2024-08-15T00:00:00Z"
+  }
+  ```
+- **Response:**
+  - **Status:** 201 Created
+  - **Body:**
+    ```json
+    {
+      "id": "task_id",
+      "title": "Task Title",
+      "description": "Task Description",
+      "dueDate": "2024-08-15T00:00:00Z",
       "status": "pending"
-    },
-    "2": {
-      "id": "2",
-      "title": "Write blog post",
-      "description": "Write a blog post about the Go project",
-      "due_date": "2023-08-14T12:34:56Z",
-      "status": "pending"
-    },
-    "3": {
-      "id": "3",
-      "title": "Update resume",
-      "description": "Add the new project details to the resume",
-      "due_date": "2023-08-03T12:34:56Z",
-      "status": "in progress"
     }
-  }
-}
-```
+    ```
 
-### Get Task by ID
-**Endpoint**: `/tasks/{id}`  
-**Method**: `GET`  
-**Description**: Retrieves a task by its ID.
+#### Get All Tasks
+- **Endpoint:** `GET /tasks/`
+- **Description:** Retrieves all tasks.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    [
+      {
+        "id": "task_id",
+        "title": "Task Title",
+        "description": "Task Description",
+        "dueDate": "2024-08-15T00:00:00Z",
+        "status": "pending"
+      },
+      ...
+    ]
+    ```
 
-**Request**:
-```http
-GET /tasks/{id}
-```
+#### Get Task by ID
+- **Endpoint:** `GET /tasks/:id`
+- **Description:** Retrieves a task by its ID.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    {
+      "id": "task_id",
+      "title": "Task Title",
+      "description": "Task Description",
+      "dueDate": "2024-08-15T00:00:00Z",
+      "status": "pending"
+    }
+    ```
 
-**Path Parameters**:
-- `id` (string): The ID of the task to retrieve.
-
-**Response**:
-```json
-{
-  "id": "1",
-  "title": "Complete Go project",
-  "description": "Finish the distributed system project in Go",
-  "due_date": "2023-08-07T12:34:56Z",
-  "status": "pending"
-}
-```
-
-### Create Task
-**Endpoint**: `/tasks/`  
-**Method**: `POST`  
-**Description**: Creates a new task. The `ID` and `due_date` are optional. If not provided, `ID` will be auto-generated and `due_date` will default to the current date and time.
-
-**Request**:
-```http
-POST /tasks/
-Content-Type: application/json
-
-{
-  "title": "New Task",
-  "description": "Description for the new task",
-  "status": "pending"
-}
-```
-
-**Response**:
-```json
-{
-  "id": "4",
-  "title": "New Task",
-  "description": "Description for the new task",
-  "due_date": "2023-08-20T12:34:56Z",
-  "status": "pending"
-}
-```
-
-### Update Task
-**Endpoint**: `/tasks/{id}`  
-**Method**: `PUT`  
-**Description**: Updates an existing task by its ID.
-
-**Request**:
-```http
-PUT /tasks/{id}
-Content-Type: application/json
-
-{
-  "title": "Updated Task Title",
-  "description": "Updated description",
-  "due_date": "2023-08-21T12:34:56Z",
-  "status": "completed"
-}
-```
-
-**Path Parameters**:
-- `id` (string): The ID of the task to update.
-
-**Response**:
-```json
-{
-  "id": "1",
-  "title": "Updated Task Title",
-  "description": "Updated description",
-  "due_date": "2023-08-21T12:34:56Z",
-  "status": "completed"
-}
-```
-
-### Delete Task
-**Endpoint**: `/tasks/{id}`  
-**Method**: `DELETE`  
-**Description**: Deletes a task by its ID.
-
-**Request**:
-```http
-DELETE /tasks/{id}
-```
-
-**Path Parameters**:
-- `id` (string): The ID of the task to delete.
-
-**Response**:
-```json
-{
-  "message": "deleted"
-}
-```
-
-## Models
-
-### Task
-```json
-{
-  "id": "string",
-  "title": "string",
-  "description": "string",
-  "due_date": "string (date-time)",
-  "status": "string"
-}
-```
-
-## Error Handling
-### Common Errors
-- **404 Not Found**: Task not found
+#### Update Task by ID
+- **Endpoint:** `PUT /tasks/:id`
+- **Description:** Updates a task by its ID.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Request Body:** 
   ```json
   {
-    "error": "task not found"
+    "title": "Updated Task Title",
+    "description": "Updated Task Description",
+    "dueDate": "2024-08-20T00:00:00Z",
+    "status": "completed"
   }
   ```
-- **400 Bad Request**: Invalid request data
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    {
+      "id": "task_id",
+      "title": "Updated Task Title",
+      "description": "Updated Task Description",
+      "dueDate": "2024-08-20T00:00:00Z",
+      "status": "completed"
+    }
+    ```
+
+#### Delete Task by ID
+- **Endpoint:** `DELETE /tasks/:id`
+- **Description:** Deletes a task by its ID.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 204 No Content
+
+### User Management Endpoints
+
+#### Register a New User
+- **Endpoint:** `POST /register`
+- **Description:** Registers a new user.
+- **Request Body:** 
   ```json
   {
-    "error": "Invalid request data"
+    "username": "newuser",
+    "password": "password"
   }
   ```
+- **Response:**
+  - **Status:** 201 Created
+  - **Body:**
+    ```json
+    {
+      "id": "user_id",
+      "username": "newuser"
+    }
+    ```
+
+#### User Login
+- **Endpoint:** `POST /login`
+- **Description:** Authenticates a user and generates a JWT token.
+- **Request Body:** 
+  ```json
+  {
+    "username": "existinguser",
+    "password": "password"
+  }
+  ```
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    {
+      "token": "jwt_token"
+    }
+    ```
+
+#### Get All Users (Admin Only)
+- **Endpoint:** `GET /users/`
+- **Description:** Retrieves all users. Requires admin role.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    [
+      {
+        "id": "user_id",
+        "username": "user"
+      },
+      ...
+    ]
+    ```
+
+#### Get User by ID
+- **Endpoint:** `GET /users/:id`
+- **Description:** Retrieves a user by their ID.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    {
+      "id": "user_id",
+      "username": "user"
+    }
+    ```
+
+#### Update User by ID
+- **Endpoint:** `PUT /user/:id`
+- **Description:** Updates a user by their ID.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Request Body:** 
+  ```json
+  {
+    "username": "updateduser",
+    "password": "newpassword"
+  }
+  ```
+- **Response:**
+  - **Status:** 200 OK
+  - **Body:**
+    ```json
+    {
+      "id": "user_id",
+      "username": "updateduser"
+    }
+    ```
+
+#### Delete User by ID (Admin Only)
+- **Endpoint:** `DELETE /users/:id`
+- **Description:** Deletes a user by their ID. Requires admin role.
+- **Request Headers:** 
+  - `Authorization: Bearer <JWT Token>`
+- **Response:**
+  - **Status:** 204 No Content
