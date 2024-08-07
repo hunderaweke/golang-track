@@ -54,6 +54,10 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if user.IsAdmin {
+		c.JSON(http.StatusNotModified, gin.H{"error": "promoting user requires admin access"})
+		return
+	}
 	updatedUser, err := u.userService.UpdateUser(id, user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -65,8 +69,8 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 func (u *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 	userClaims := getUserClaims(c)
-	if userClaims.UserID != id || !userClaims.IsAdmin {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "method not allowed"})
+	if !userClaims.IsAdmin {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "deleting user requires admin access"})
 		return
 	}
 	if err := u.userService.DeleteUser(id); err != nil {

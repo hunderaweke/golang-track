@@ -14,11 +14,11 @@ func AddTaskRouter(r *gin.Engine, db *mongo.Database) {
 	tasksGroup := r.Group("/tasks")
 	tasksGroup.Use(middlewares.JWTMiddleware())
 	{
-		tasksGroup.GET("/", middlewares.JWTMiddleware(), t.GetTasks)
+		tasksGroup.GET("/", t.GetTasks)
 		tasksGroup.GET("/:id", t.GetTaskByID)
-		tasksGroup.PUT("/:id", t.UpdateTask)
-		tasksGroup.DELETE("/:id", t.DeleteTask)
-		tasksGroup.POST("/", t.CreateTask)
+		tasksGroup.PUT("/:id", middlewares.AdminMiddleware(), t.UpdateTask)
+		tasksGroup.DELETE("/:id", middlewares.AdminMiddleware(), t.DeleteTask)
+		tasksGroup.POST("/", middlewares.AdminMiddleware(), t.CreateTask)
 	}
 }
 
@@ -26,6 +26,7 @@ func AddUserRouter(r *gin.Engine, db *mongo.Database) {
 	u := controllers.NewUserController(db)
 	admin := r.Use(middlewares.JWTMiddleware())
 	{
+		admin.PUT("/promote", middlewares.AdminMiddleware(), u.PromoteUser)
 		admin.GET("/users/", middlewares.AdminMiddleware(), u.GetUsers)
 		admin.GET("/users/:id", u.GetUserByID)
 		admin.PUT("/user/:id", u.UpdateUser)

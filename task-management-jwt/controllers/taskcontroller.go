@@ -30,14 +30,7 @@ func getUserClaims(c *gin.Context) middlewares.UserClaims {
 }
 
 func (t *TaskController) GetTasks(c *gin.Context) {
-	userClaims := getUserClaims(c)
-	var tasks []models.Task
-	var err error
-	if !userClaims.IsAdmin {
-		tasks, err = t.taskService.GetTaskByUserID(userClaims.UserID)
-	} else {
-		tasks, err = t.taskService.GetTasks()
-	}
+	tasks, err := t.taskService.GetTasks()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
@@ -58,6 +51,10 @@ func (t *TaskController) GetTaskByID(c *gin.Context) {
 func (t *TaskController) UpdateTask(c *gin.Context) {
 	id := c.Param("id")
 	userClaims := getUserClaims(c)
+	if !userClaims.IsAdmin {
+		c.JSON(http.StatusNotModified, gin.H{"error": "updating task requires admin access"})
+		return
+	}
 	var updatedTask models.Task
 	err := c.BindJSON(&updatedTask)
 	if err != nil {
@@ -75,6 +72,10 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 func (t *TaskController) DeleteTask(c *gin.Context) {
 	id := c.Param("id")
 	userClaims := getUserClaims(c)
+	if !userClaims.IsAdmin {
+		c.JSON(http.StatusNotModified, gin.H{"error": "deleting task requires admin access"})
+		return
+	}
 	_, err := t.taskService.GetTaskByID(userClaims.UserID, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": data.TaskNotFoundError})
@@ -87,6 +88,10 @@ func (t *TaskController) DeleteTask(c *gin.Context) {
 func (t *TaskController) CreateTask(c *gin.Context) {
 	var task models.Task
 	userClaims := getUserClaims(c)
+	if !userClaims.IsAdmin {
+		c.JSON(http.StatusNotModified, gin.H{"error": "creating task requires admin access"})
+		return
+	}
 	if err := c.ShouldBind(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

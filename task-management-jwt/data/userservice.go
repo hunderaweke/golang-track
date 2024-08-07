@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"task-management-api-mongodb/models"
 
@@ -108,6 +109,12 @@ func (u *UserService) DeleteUser(userID string) error {
 }
 
 func (u *UserService) Create(user *models.User) (*models.User, error) {
+	cnt, _ := u.collection.CountDocuments(context.Background(), bson.D{{}}, options.Count())
+	if cnt == 0 {
+		user.IsAdmin = true
+	} else if cnt > 0 && user.IsAdmin {
+		return user, errors.New("promoting user requires admin access")
+	}
 	_, err := u.collection.InsertOne(context.Background(), user, options.InsertOne())
 	return user, err
 }
