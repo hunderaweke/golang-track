@@ -1,207 +1,335 @@
-## API Documentation
-
 ### Task Management Endpoints
 
-#### Create a New Task
-- **Endpoint:** `POST /tasks/`
-- **Description:** Creates a new task.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Request Body:** 
-  ```json
-  {
-    "title": "Task Title",
-    "description": "Task Description",
-    "dueDate": "2024-08-15T00:00:00Z"
+### API Documentation
+
+#### Authentication and User Management
+
+##### Register a New User
+**Endpoint:** `POST /register`
+
+**Description:** Register a new user.
+
+**Request Body:**
+```json
+{
+  "name": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "name": "string",
+  "email": "string"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
+##### User Login
+**Endpoint:** `POST /login`
+
+**Description:** Authenticate a user and return a JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response:**
+- **200 OK**
+```json
+{
+  "message": "successful login",
+  "token": "string",
+  "user": {
+    "id": "string",
+    "name": "string",
+    "email": "string"
   }
-  ```
-- **Response:**
-  - **Status:** 201 Created
-  - **Body:**
-    ```json
+}
+```
+- **500 Internal Server Error**
+```json
+{
+  "error": "string"
+}
+```
+
+##### Get All Users
+**Endpoint:** `GET /users/`
+
+**Description:** Retrieve a list of all users.
+
+**Response:**
+- **200 OK**
+```json
+{
+  "users": [
     {
-      "id": "task_id",
-      "title": "Task Title",
-      "description": "Task Description",
-      "dueDate": "2024-08-15T00:00:00Z",
-      "status": "pending"
+      "id": "string",
+      "name": "string",
+      "email": "string"
     }
-    ```
+  ]
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
 
-#### Get All Tasks
-- **Endpoint:** `GET /tasks/`
-- **Description:** Retrieves all tasks.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    [
-      {
-        "id": "task_id",
-        "title": "Task Title",
-        "description": "Task Description",
-        "dueDate": "2024-08-15T00:00:00Z",
-        "status": "pending"
-      },
-      ...
-    ]
-    ```
+##### Get User by ID
+**Endpoint:** `GET /users/:id`
 
-#### Get Task by ID
-- **Endpoint:** `GET /tasks/:id`
-- **Description:** Retrieves a task by its ID.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
+**Description:** Retrieve a user by ID.
+
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "name": "string",
+  "email": "string"
+}
+```
+- **404 Not Found**
+```json
+{
+  "error": "string"
+}
+```
+
+##### Promote User to Admin
+**Endpoint:** `PUT /users/promote`
+
+**Description:** Promote a user to admin.
+
+**Request Body:**
+```json
+{
+  "id": "string",
+  "email": "string"
+}
+```
+
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "name": "string",
+  "email": "string",
+  "is_admin": true
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
+##### Update User
+**Endpoint:** `PUT /users/:id`
+
+**Description:** Update user details.
+
+**Request Body:**
+```json
+{
+  "name": "string",
+  "email": "string"
+}
+```
+
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "name": "string",
+  "email": "string"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
+##### Delete User
+**Endpoint:** `DELETE /users/:id`
+
+**Description:** Delete a user by ID.
+
+**Response:**
+- **200 OK**
+```json
+{
+  "message": "deleted"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
+#### Task Management
+
+##### Create a New Task
+**Endpoint:** `POST /tasks/`
+
+**Description:** Create a new task.
+
+**Request Body:**
+```json
+{
+  "user_id": "string",
+  "title": "string",
+  "description": "string",
+  "due_date": "2024-01-01T00:00:00Z",
+  "status": "string"
+}
+```
+
+**Response:**
+- **201 Created**
+```json
+{
+  "id": "string",
+  "user_id": "string",
+  "title": "string",
+  "description": "string",
+  "due_date": "2024-01-01T00:00:00Z",
+  "status": "string"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
+##### Get All Tasks
+**Endpoint:** `GET /tasks/`
+
+**Description:** Retrieve a list of all tasks.
+
+**Response:**
+- **200 OK**
+```json
+{
+  "tasks": [
     {
-      "id": "task_id",
-      "title": "Task Title",
-      "description": "Task Description",
-      "dueDate": "2024-08-15T00:00:00Z",
-      "status": "pending"
+      "id": "string",
+      "user_id": "string",
+      "title": "string",
+      "description": "string",
+      "due_date": "2024-01-01T00:00:00Z",
+      "status": "string"
     }
-    ```
+  ]
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
 
-#### Update Task by ID
-- **Endpoint:** `PUT /tasks/:id`
-- **Description:** Updates a task by its ID.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Request Body:** 
-  ```json
-  {
-    "title": "Updated Task Title",
-    "description": "Updated Task Description",
-    "dueDate": "2024-08-20T00:00:00Z",
-    "status": "completed"
-  }
-  ```
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    {
-      "id": "task_id",
-      "title": "Updated Task Title",
-      "description": "Updated Task Description",
-      "dueDate": "2024-08-20T00:00:00Z",
-      "status": "completed"
-    }
-    ```
+##### Get Task by ID
+**Endpoint:** `GET /tasks/:id`
 
-#### Delete Task by ID
-- **Endpoint:** `DELETE /tasks/:id`
-- **Description:** Deletes a task by its ID.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 204 No Content
+**Description:** Retrieve a task by ID.
 
-### User Management Endpoints
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "user_id": "string",
+  "title": "string",
+  "description": "string",
+  "due_date": "2024-01-01T00:00:00Z",
+  "status": "string"
+}
+```
+- **404 Not Found**
+```json
+{
+  "error": "string"
+}
+```
 
-#### Register a New User
-- **Endpoint:** `POST /register`
-- **Description:** Registers a new user.
-- **Request Body:** 
-  ```json
-  {
-    "username": "newuser",
-    "password": "password"
-  }
-  ```
-- **Response:**
-  - **Status:** 201 Created
-  - **Body:**
-    ```json
-    {
-      "id": "user_id",
-      "username": "newuser"
-    }
-    ```
+##### Update Task
+**Endpoint:** `PUT /tasks/:id`
 
-#### User Login
-- **Endpoint:** `POST /login`
-- **Description:** Authenticates a user and generates a JWT token.
-- **Request Body:** 
-  ```json
-  {
-    "username": "existinguser",
-    "password": "password"
-  }
-  ```
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    {
-      "token": "jwt_token"
-    }
-    ```
+**Description:** Update a task by ID.
 
-#### Get All Users (Admin Only)
-- **Endpoint:** `GET /users/`
-- **Description:** Retrieves all users. Requires admin role.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    [
-      {
-        "id": "user_id",
-        "username": "user"
-      },
-      ...
-    ]
-    ```
+**Request Body:**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "due_date": "2024-01-01T00:00:00Z",
+  "status": "string"
+}
+```
 
-#### Get User by ID
-- **Endpoint:** `GET /users/:id`
-- **Description:** Retrieves a user by their ID.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    {
-      "id": "user_id",
-      "username": "user"
-    }
-    ```
+**Response:**
+- **200 OK**
+```json
+{
+  "id": "string",
+  "user_id": "string",
+  "title": "string",
+  "description": "string",
+  "due_date": "2024-01-01T00:00:00Z",
+  "status": "string"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
 
-#### Update User by ID
-- **Endpoint:** `PUT /user/:id`
-- **Description:** Updates a user by their ID.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Request Body:** 
-  ```json
-  {
-    "username": "updateduser",
-    "password": "newpassword"
-  }
-  ```
-- **Response:**
-  - **Status:** 200 OK
-  - **Body:**
-    ```json
-    {
-      "id": "user_id",
-      "username": "updateduser"
-    }
-    ```
+##### Delete Task
+**Endpoint:** `DELETE /tasks/:id`
 
-#### Delete User by ID (Admin Only)
-- **Endpoint:** `DELETE /users/:id`
-- **Description:** Deletes a user by their ID. Requires admin role.
-- **Request Headers:** 
-  - `Authorization: Bearer <JWT Token>`
-- **Response:**
-  - **Status:** 204 No Content
+**Description:** Delete a task by ID.
+
+**Response:**
+- **200 OK**
+```json
+{
+  "message": "deleted"
+}
+```
+- **400 Bad Request**
+```json
+{
+  "error": "string"
+}
+```
+
