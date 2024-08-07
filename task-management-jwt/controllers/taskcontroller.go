@@ -87,11 +87,6 @@ func (t *TaskController) DeleteTask(c *gin.Context) {
 
 func (t *TaskController) CreateTask(c *gin.Context) {
 	var task models.Task
-	userClaims := getUserClaims(c)
-	if !userClaims.IsAdmin {
-		c.JSON(http.StatusNotModified, gin.H{"error": "creating task requires admin access"})
-		return
-	}
 	if err := c.ShouldBind(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -100,7 +95,6 @@ func (t *TaskController) CreateTask(c *gin.Context) {
 		task.DueDate = time.Now()
 	}
 	task.ID = strconv.Itoa(t.nextID)
-	task.UserID = userClaims.UserID
 	t.nextID++
 	err := t.taskService.AddTask(task)
 	if err != nil {

@@ -71,6 +71,23 @@ func (u *UserService) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (u *UserService) PromoteUser(userID string) (*models.User, error) {
+	user, err := u.GetUserByID(userID)
+	if err != nil {
+		return user, err
+	}
+	user.IsAdmin = true
+	opts := options.Replace()
+	res, err := u.collection.ReplaceOne(context.Background(), bson.D{{"id", userID}}, user, opts)
+	if err != nil {
+		return user, err
+	}
+	if res.ModifiedCount != 1 {
+		return user, fmt.Errorf("error modifing: users more than one update")
+	}
+	return user, nil
+}
+
 func (u *UserService) UpdateUser(userID string, data models.User) (*models.User, error) {
 	user, err := u.GetUserByID(userID)
 	if err != nil {
@@ -81,6 +98,9 @@ func (u *UserService) UpdateUser(userID string, data models.User) (*models.User,
 	}
 	if data.Email != "" {
 		user.Email = data.Email
+	}
+	if data.IsAdmin != false {
+		user.IsAdmin = data.IsAdmin
 	}
 	opts := options.Replace()
 	res, err := u.collection.ReplaceOne(context.Background(), bson.D{{"id", userID}}, user, opts)

@@ -42,6 +42,29 @@ func (u *UserController) GetUserByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, user)
 }
 
+func (u *UserController) PromoteUser(c *gin.Context) {
+	var user *models.User
+	err := c.BindJSON(&user)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	if user.ID == "" && user.Email == "" {
+		c.JSON(http.StatusNotAcceptable, gin.H{"error": "invalid data"})
+		return
+	}
+	if user.Email != "" && user.ID == "" {
+		user, err = u.userService.GetByEmail(user.Email)
+	}
+	user.IsAdmin = true
+	user, err = u.userService.PromoteUser(user.ID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, user)
+}
+
 func (u *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	user := models.User{}
