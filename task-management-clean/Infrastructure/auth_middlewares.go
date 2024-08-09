@@ -40,7 +40,7 @@ func AdminMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userClaims := claims.(*customClaims)
+		userClaims := claims.(*UserClaims)
 		if !userClaims.IsAdmin {
 			c.JSON(http.StatusForbidden, gin.H{"error": "admin access needed"})
 			c.Abort()

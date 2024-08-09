@@ -1,13 +1,13 @@
 package infrastructure
 
 import (
+	domain "clean-architecture/Domain"
 	"os"
-	domain "task-management-api-mongodb/Domain"
 
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
 )
 
-type customClaims struct {
+type UserClaims struct {
 	UserID  string `json:"user_id"`
 	Email   string `json:"email"`
 	IsAdmin bool   `json:"is_admin"`
@@ -15,7 +15,7 @@ type customClaims struct {
 }
 
 func GenerateToken(u domain.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, customClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		UserID:  u.ID,
 		Email:   u.Email,
 		IsAdmin: u.IsAdmin,
@@ -28,13 +28,13 @@ func GenerateToken(u domain.User) (string, error) {
 	return jwtToken, nil
 }
 
-func ValidateToken(jwtToken string) (*customClaims, bool) {
-	claims := &customClaims{}
+func ValidateToken(jwtToken string) (*UserClaims, bool) {
+	claims := &UserClaims{}
 	jwtKey := []byte(os.Getenv("JWT_SECRET"))
 	token, err := jwt.ParseWithClaims(jwtToken, claims, func(t *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-	if err != nil || !token.Vaild {
+	if err != nil || !token.Valid {
 		return claims, false
 	}
 	return claims, true
