@@ -45,3 +45,47 @@ func TestGenerateToken(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateToken(t *testing.T) {
+	jwtSecret := "validSecret"
+	t.Setenv("JWT_SECRET", jwtSecret)
+	users := []domain.User{
+		{
+			ID:      "sdjfksdj",
+			Email:   "email@email.com",
+			IsAdmin: true,
+		},
+		{
+			ID:      "sdjsadfsdfds",
+			Email:   "email@sdds.com",
+			IsAdmin: false,
+		},
+		{
+			ID:      "ssdfds",
+			Email:   "email@sdsd.com",
+			IsAdmin: false,
+		},
+	}
+	tests := []string{}
+	for _, u := range users {
+		token, err := GenerateToken(u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tests = append(tests, token)
+	}
+	for _, tt := range tests {
+		_, valid := ValidateToken(tt)
+		if !valid {
+			t.Fatal("expected the token to be valid but found invalid")
+		}
+	}
+	jwtSecret = "invalidSecret"
+	t.Setenv("JWT_SECRET", jwtSecret)
+	for _, tt := range tests {
+		_, valid := ValidateToken(tt)
+		if valid {
+			t.Fatal("expected the token to be invalid but found valid")
+		}
+	}
+}
