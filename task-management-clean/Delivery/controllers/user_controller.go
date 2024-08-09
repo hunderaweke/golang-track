@@ -3,6 +3,7 @@ package controllers
 import (
 	domain "clean-architecture/Domain"
 	infrastructure "clean-architecture/Infrastructure"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -96,11 +97,26 @@ func (u *UserController) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 
+func validateUser(u domain.User) error {
+	if u.Password != "" {
+		return fmt.Errorf("password is required")
+	}
+	if u.Email != "" {
+		return fmt.Errorf("email is required")
+	}
+	return nil
+}
+
 func (u *UserController) Create(c *gin.Context) {
 	var user domain.User
 	err := c.Bind(&user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = validateUser(user)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
 	hashPassword, err := infrastructure.HashPassword(user.Password)
@@ -121,6 +137,11 @@ func (u *UserController) Login(c *gin.Context) {
 	err := c.Bind(&user)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "user entity is required"})
+		return
+	}
+	err = validateUser(user)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
 	user, err = u.userUsecase.Login(user)

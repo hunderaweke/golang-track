@@ -197,7 +197,8 @@
 **Endpoint:** `POST /tasks/`
 
 **Description:** Create a new task.
-
+**> [!NOTE]
+> Here it is not required to set the due_date and the title as a default value the due_date is the current date and the description will be empty 
 **Request Body:**
 ```json
 {
@@ -236,8 +237,7 @@
 **Response:**
 - **200 OK**
 ```json
-{
-  "tasks": [
+[
     {
       "id": "string",
       "user_id": "string",
@@ -246,8 +246,8 @@
       "due_date": "2024-01-01T00:00:00Z",
       "status": "string"
     }
-  ]
-}
+]
+
 ```
 - **400 Bad Request**
 ```json
@@ -320,12 +320,7 @@
 **Description:** Delete a task by ID.
 
 **Response:**
-- **200 OK**
-```json
-{
-  "message": "deleted"
-}
-```
+- **204 No Content**
 - **400 Bad Request**
 ```json
 {
