@@ -25,7 +25,16 @@ func getUserClaims(c *gin.Context) infrastructure.UserClaims {
 }
 
 func (t *TaskController) GetTasks(c *gin.Context) {
-	tasks, err := t.taskUsecase.Get()
+	claims := getUserClaims(c)
+	var (
+		tasks []domain.Task
+		err   error
+	)
+	if claims.IsAdmin {
+		tasks, err = t.taskUsecase.Get()
+	} else {
+		tasks, err = t.taskUsecase.GetByUserID(claims.UserID)
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
@@ -35,6 +44,11 @@ func (t *TaskController) GetTasks(c *gin.Context) {
 func (t *TaskController) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
 	task, err := t.taskUsecase.GetByID(id)
+	claims := getUserClaims(c)
+	if !claims.IsAdmin && task.UserID != claims.UserID {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "the task doesn't belong to the current user"})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return

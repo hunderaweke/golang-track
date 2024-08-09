@@ -58,7 +58,7 @@ func AddUserRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, c c
 		admin.PUT("/promote", infrastructure.AdminMiddleware(), u.controller.PromoteUser)
 		admin.GET("/", infrastructure.AdminMiddleware(), u.controller.GetUsers)
 		admin.GET("/:id", u.controller.GetUserByID)
-		admin.PUT("/:id", u.controller.UpdateUser)
+		admin.PUT("/:id", infrastructure.AdminMiddleware(), u.controller.UpdateUser)
 		admin.DELETE("/:id", infrastructure.AdminMiddleware(), u.controller.DeleteUser)
 	}
 	r.POST("/register", u.controller.Create)
