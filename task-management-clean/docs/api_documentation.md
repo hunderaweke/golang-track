@@ -327,4 +327,10 @@
   "error": "string"
 }
 ```
-
+### Design Decisions:
+1. Organized the code to be independent of each other and using the separation of concerns
+2. The bussiness logic and the Entities are indepent from the other parts of the code which will make them isolated and easier for handling outside layers change
+3. Interfaces are used when an abstarction of the objects are needed specially in the domain of the project
+4. Using infrastructures when an independent operation that could be needed in different layers
+5. Using security concerns highly for marshaling and unmarshaling the json data
+6. Making the database independent from the other codes because that could affect the other codes
