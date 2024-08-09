@@ -25,6 +25,22 @@ func getUserClaims(c *gin.Context) infrastructure.UserClaims {
 	return *userClaims
 }
 
+func validateTask(t domain.Task) error {
+	if t.Status == "" {
+		return fmt.Errorf("task status is required")
+	}
+	if t.Status != "pending" && t.Status != "done" {
+		return fmt.Errorf("task status can only be done or pending")
+	}
+	if t.Title == "" {
+		return fmt.Errorf("task title is is required")
+	}
+	if t.UserID == "" {
+		return fmt.Errorf("user_id is required")
+	}
+	return nil
+}
+
 func (t *TaskController) GetTasks(c *gin.Context) {
 	claims := getUserClaims(c)
 	var (
@@ -92,19 +108,6 @@ func (t *TaskController) DeleteTask(c *gin.Context) {
 	}
 	t.taskUsecase.Delete(taskID)
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
-}
-
-func validateTask(t domain.Task) error {
-	if t.UserID == "" {
-		return fmt.Errorf("user_id is required")
-	} else if t.Status == "" {
-		return fmt.Errorf("task status is required")
-	} else if t.Title == "" {
-		return fmt.Errorf("task title is is required")
-	} else if t.Status != "pending" && t.Status != "done" {
-		return fmt.Errorf("task status can only be done or pending")
-	}
-	return nil
 }
 
 func (t *TaskController) CreateTask(c *gin.Context) {

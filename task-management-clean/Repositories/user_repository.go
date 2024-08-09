@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type UserService struct {
+type UserRepository struct {
 	collection *mongo.Collection
 }
 
@@ -28,10 +28,10 @@ func NewUserService(c context.Context, db *mongo.Database) domain.UserRepository
 		Options: options.Index().SetUnique(true),
 	}
 	collection.Indexes().CreateOne(c, emailIndexModel)
-	return &UserService{collection: collection}
+	return &UserRepository{collection: collection}
 }
 
-func (u *UserService) Get(c context.Context) ([]domain.User, error) {
+func (u *UserRepository) Get(c context.Context) ([]domain.User, error) {
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
 	users := []domain.User{}
 	cursor, err := u.collection.Find(c, bson.D{{}}, opts)
@@ -49,22 +49,18 @@ func (u *UserService) Get(c context.Context) ([]domain.User, error) {
 	return users, nil
 }
 
-func (u *UserService) GetByID(c context.Context, userID string) (*domain.User, error) {
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return &domain.User{}, fmt.Errorf("user with id %v not found", userID)
-	}
+func (u *UserRepository) GetByID(c context.Context, userID string) (*domain.User, error) {
 	opts := options.FindOne()
 	user := domain.User{}
-	res := u.collection.FindOne(c, bson.D{{"_id", id}}, opts)
-	err = res.Decode(&user)
+	res := u.collection.FindOne(c, bson.D{{"_id", userID}}, opts)
+	err := res.Decode(&user)
 	if err != nil {
 		return &user, err
 	}
 	return &user, nil
 }
 
-func (u *UserService) GetByEmail(c context.Context, email string) (*domain.User, error) {
+func (u *UserRepository) GetByEmail(c context.Context, email string) (*domain.User, error) {
 	opts := options.FindOne()
 	user := domain.User{}
 	res := u.collection.FindOne(c, bson.D{{"email", email}}, opts)
@@ -75,7 +71,7 @@ func (u *UserService) GetByEmail(c context.Context, email string) (*domain.User,
 	return &user, nil
 }
 
-func (u *UserService) PromoteUser(c context.Context, userID string) error {
+func (u *UserRepository) PromoteUser(c context.Context, userID string) error {
 	user, err := u.GetByID(c, userID)
 	if err != nil {
 		return err
@@ -96,7 +92,7 @@ func (u *UserService) PromoteUser(c context.Context, userID string) error {
 	return nil
 }
 
-func (u *UserService) Update(c context.Context, userID string, data domain.User) (*domain.User, error) {
+func (u *UserRepository) Update(c context.Context, userID string, data domain.User) (*domain.User, error) {
 	user, err := u.GetByID(c, userID)
 	if err != nil {
 		return user, err
@@ -125,7 +121,7 @@ func (u *UserService) Update(c context.Context, userID string, data domain.User)
 	return user, nil
 }
 
-func (u *UserService) Delete(c context.Context, userID string) error {
+func (u *UserRepository) Delete(c context.Context, userID string) error {
 	opts := options.Delete()
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -144,7 +140,7 @@ func (u *UserService) Delete(c context.Context, userID string) error {
 	return nil
 }
 
-func (u *UserService) Create(c context.Context, user domain.User) (*domain.User, error) {
+func (u *UserRepository) Create(c context.Context, user domain.User) (*domain.User, error) {
 	cnt, _ := u.collection.CountDocuments(c, bson.D{{}}, options.Count())
 	if cnt == 0 {
 		user.IsAdmin = true

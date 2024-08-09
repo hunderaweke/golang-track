@@ -23,7 +23,7 @@ func (u *UserController) GetUsers(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"users": users})
+	c.IndentedJSON(http.StatusOK, users)
 }
 
 func (u *UserController) GetUserByID(c *gin.Context) {
@@ -127,7 +127,7 @@ func (u *UserController) Create(c *gin.Context) {
 	if err != nil {
 		c.JSON(500, gin.H{"error": "internal server error"})
 	}
-	user.Password = hashPassword
+	user.User.Password = hashPassword
 	newUser, err := u.userUsecase.Create(user.User)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -143,7 +143,6 @@ func (u *UserController) Login(c *gin.Context) {
 	}
 	err := c.Bind(&user)
 	user.User.Password = user.Password
-	fmt.Println(user.User)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "user entity is required"})
 		return

@@ -44,11 +44,7 @@ func (t *TasksRepository) Get(c context.Context) ([]domain.Task, error) {
 }
 
 func (t *TasksRepository) GetByID(c context.Context, taskID string) (domain.Task, error) {
-	id, err := primitive.ObjectIDFromHex(taskID)
-	if err != nil {
-		return domain.Task{}, fmt.Errorf("task with id %v not found", taskID)
-	}
-	res := t.collection.FindOne(c, bson.D{{"_id", id}}, options.FindOne())
+	res := t.collection.FindOne(c, bson.D{{"_id", taskID}}, options.FindOne())
 	var task domain.Task
 	if err := res.Decode(&task); err != nil {
 		return domain.Task{}, fmt.Errorf("task with id %v not found", taskID)
