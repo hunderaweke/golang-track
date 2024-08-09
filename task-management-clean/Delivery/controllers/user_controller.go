@@ -123,19 +123,15 @@ func (u *UserController) Login(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "user entity is required"})
 		return
 	}
-	exsitingUser, err := u.userUsecase.GetByEmail(user.Email)
+	user, err = u.userUsecase.Login(user)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	if !infrastructure.ComparePassword(user.Password, exsitingUser.Password) {
-		c.JSON(500, gin.H{"error": "invalid password or email"})
-		return
-	}
-	jwtToken, err := infrastructure.GenerateToken(domain.User(*exsitingUser))
+	jwtToken, err := infrastructure.GenerateToken(user)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken, "user": exsitingUser})
+	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken, "user": user})
 }

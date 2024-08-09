@@ -42,6 +42,7 @@ type UserUsecase interface {
 	PromoteUser(userID string) error
 	Delete(userID string) error
 	Update(userID string, data User) (*User, error)
+	Login(user User) (User, error)
 }
 type TaskRepository interface {
 	Create(c context.Context, t Task) (Task, error)

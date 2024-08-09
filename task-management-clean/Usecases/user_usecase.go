@@ -3,7 +3,10 @@ package usecases
 import (
 	domain "clean-architecture/Domain"
 	"context"
+	"fmt"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userUsecase struct {
@@ -48,6 +51,17 @@ func (uu *userUsecase) PromoteUser(userID string) error {
 	ctx, cancel := context.WithTimeout(uu.ctx, uu.timeoutDuration)
 	defer cancel()
 	return uu.userRepository.PromoteUser(ctx, userID)
+}
+
+func (uu *userUsecase) Login(user domain.User) (domain.User, error) {
+	exsitingUser, err := uu.GetByEmail(user.Email)
+	if err != nil {
+		return user, err
+	}
+	if bcrypt.CompareHashAndPassword([]byte(exsitingUser.Password), []byte(user.Password)) != nil {
+		return user, fmt.Errorf("invalid email or password")
+	}
+	return *exsitingUser, nil
 }
 
 func (uu *userUsecase) Delete(userID string) error {
