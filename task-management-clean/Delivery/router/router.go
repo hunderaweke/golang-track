@@ -19,6 +19,11 @@ type userRouter struct {
 	controller controllers.UserController
 }
 
+func SetupRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, ctx context.Context) {
+	AddTaskRouter(r, db, timeOut, ctx)
+	AddUserRouter(r, db, timeOut, ctx)
+}
+
 func NewTaskRouter(c context.Context, db *mongo.Database, timeOut time.Duration) taskRouter {
 	taskRepository := repository.NewTaskService(c, db)
 	taskUsecase := usecases.NewTaskUseCase(taskRepository, timeOut, c)

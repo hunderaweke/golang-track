@@ -22,7 +22,6 @@ func main() {
 	db := clnt.Database("task_management_api")
 	ctx := context.Background()
 	timeOut := time.Duration(4 * time.Second)
-	router.AddTaskRouter(r, db, timeOut, ctx)
-	router.AddUserRouter(r, db, timeOut, ctx)
+	router.SetupRouter(r, db, timeOut, ctx)
 	r.Run(":7070")
 }
