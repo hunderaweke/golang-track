@@ -153,5 +153,8 @@ func (u *UserService) Create(c context.Context, user domain.User) (*domain.User,
 	}
 	user.ID = primitive.NewObjectIDFromTimestamp(time.Now()).Hex()
 	_, err := u.collection.InsertOne(context.Background(), user, options.InsertOne())
+	if mongo.IsDuplicateKeyError(err) {
+		return &user, fmt.Errorf("user with the same email already exists")
+	}
 	return &user, err
 }

@@ -98,23 +98,27 @@ func (u *UserController) DeleteUser(c *gin.Context) {
 }
 
 func validateUser(u domain.User) error {
-	if u.Password != "" {
+	if u.Password == "" {
 		return fmt.Errorf("password is required")
 	}
-	if u.Email != "" {
+	if u.Email == "" {
 		return fmt.Errorf("email is required")
 	}
 	return nil
 }
 
 func (u *UserController) Create(c *gin.Context) {
-	var user domain.User
-	err := c.Bind(&user)
+	var user struct {
+		Password string `json:"password"`
+		domain.User
+	}
+	err := c.BindJSON(&user)
+	user.User.Password = user.Password
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = validateUser(user)
+	err = validateUser(user.User)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
@@ -124,35 +128,39 @@ func (u *UserController) Create(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "internal server error"})
 	}
 	user.Password = hashPassword
-	_, err = u.userUsecase.Create(user)
+	newUser, err := u.userUsecase.Create(user.User)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "internal server error"})
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, user)
+	c.IndentedJSON(http.StatusOK, newUser)
 }
 
 func (u *UserController) Login(c *gin.Context) {
-	var user domain.User
+	var user struct {
+		Password string `json:"password"`
+		domain.User
+	}
 	err := c.Bind(&user)
+	user.User.Password = user.Password
+	fmt.Println(user.User)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "user entity is required"})
 		return
 	}
-	err = validateUser(user)
+	err = validateUser(user.User)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
-		return
 	}
-	user, err = u.userUsecase.Login(user)
+	exsitingUser, err := u.userUsecase.Login(user.User)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	jwtToken, err := infrastructure.GenerateToken(user)
+	jwtToken, err := infrastructure.GenerateToken(exsitingUser)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken, "user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "successful login", "token": jwtToken, "user": exsitingUser})
 }

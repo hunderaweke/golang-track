@@ -22,8 +22,8 @@ type User struct {
 	ID       string `json:"id" bson:"_id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
-	Password string `json:"-"`
-	IsAdmin  bool   `bson:"is_admin" json:"-"`
+	Password string `json:"-" bson:"password"`
+	IsAdmin  bool   `bson:"is_admin" json:"is_admin"`
 }
 type UserRepository interface {
 	Create(c context.Context, u User) (*User, error)
