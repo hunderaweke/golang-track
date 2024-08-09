@@ -34,7 +34,7 @@ func (t *TaskController) GetTasks(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"tasks": tasks})
+	c.IndentedJSON(http.StatusOK, tasks)
 }
 
 func (t *TaskController) GetTaskByID(c *gin.Context) {

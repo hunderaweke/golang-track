@@ -16,7 +16,7 @@ var (
 )
 
 func GetTasks(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, gin.H{"tasks": T.Tasks})
+	c.IndentedJSON(http.StatusOK, T.Tasks)
 }
 
 func GetTaskByID(c *gin.Context) {
