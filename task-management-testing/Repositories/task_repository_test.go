@@ -2,57 +2,36 @@ package repository
 
 import (
 	"context"
+	"os"
 	"testing"
 	domain "testing-api/Domain"
+	"testing-api/database"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	mongoMocks "github.com/sv-tools/mongoifc/mocks/mockery"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TaskRepositoryTestSuite struct {
 	suite.Suite
+	db             *mongo.Database
 	tasks          []domain.Task
 	taskRepository domain.TaskRepository
-	mockCol        *mongoMocks.Collection
-	mockDb         *mongoMocks.Database
 }
 
 func (suite *TaskRepositoryTestSuite) SetupSuite() {
-	suite.mockCol = new(mongoMocks.Collection)
-	suite.mockDb = new(mongoMocks.Database)
-
-	suite.mockCol.On("InsertOne", context.Background(), mock.Anything).Return(
-		&mongo.InsertOneResult{
-			InsertedID: primitive.NewObjectID(),
-		},
-		nil,
-	).Once()
-	suite.mockCol.On("Find", context.Background(), mock.Anything).Return(
-		new(mongoMocks.Cursor),
-		nil,
-	).Once()
-	suite.mockCol.On("UpdateOne", context.Background(), mock.Anything, mock.Anything).Return(
-		&mongo.UpdateResult{
-			MatchedCount:  1,
-			ModifiedCount: 1,
-		},
-		nil,
-	).Once()
-	suite.mockCol.On("DeleteOne", context.Background(), mock.Anything).Return(
-		&mongo.DeleteResult{
-			DeletedCount: 1,
-		},
-		nil,
-	).Once()
-
-	suite.mockDb.On("Collection", domain.TaskCollection).Return(suite.mockCol)
-	suite.taskRepository = NewTaskService(context.TODO(), suite.mockDb)
+	dbUri := os.Getenv("MONGODB_URL")
+	clnt, err := database.NewConnection(context.TODO(), dbUri)
+	if err != nil {
+		suite.T().Fatal(err)
+	}
+	db := clnt.Database(domain.TaskCollection, options.Database())
+	suite.db = db
+	suite.taskRepository = NewTaskService(context.TODO(), db)
 	suite.tasks = []domain.Task{
 		{
 			UserID:      "user123",
@@ -90,6 +69,13 @@ func (suite *TaskRepositoryTestSuite) SetupSuite() {
 			Status:      "done",
 		},
 	}
+}
+
+func (suite *TaskRepositoryTestSuite) TearDownSuite() {
+	collection := suite.db.Collection(domain.TaskCollection)
+	collection.DeleteMany(context.TODO(), bson.D{{}}, options.Delete())
+	suite.db.Drop(context.TODO())
+	suite.db.Client().Disconnect(context.TODO())
 }
 
 func (suite *TaskRepositoryTestSuite) TestCreate() {
@@ -159,11 +145,6 @@ func (suite *TaskRepositoryTestSuite) TestDelete() {
 	err := suite.taskRepository.Delete(context.TODO(), suite.tasks[0].ID)
 	assert.NoError(err)
 	suite.tasks = suite.tasks[1:]
-}
-
-func (suite *TaskRepositoryTestSuite) TearDownSuite() {
-	suite.mockCol.AssertExpectations(suite.T())
-	suite.mockDb.AssertExpectations(suite.T())
 }
 
 func TestTaskRepositorySuite(t *testing.T) {

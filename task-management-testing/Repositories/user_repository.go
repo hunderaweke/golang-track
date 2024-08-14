@@ -7,7 +7,6 @@ import (
 	domain "testing-api/Domain"
 	"time"
 
-	"github.com/sv-tools/mongoifc"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,10 +14,10 @@ import (
 )
 
 type UserRepository struct {
-	collection mongoifc.Collection
+	collection *mongo.Collection
 }
 
-func NewUserService(c context.Context, db mongoifc.Database) domain.UserRepository {
+func NewUserService(c context.Context, db *mongo.Database) domain.UserRepository {
 	collection := db.Collection(domain.UserCollection)
 	emailIndexModel := mongo.IndexModel{
 		Keys: bson.M{
