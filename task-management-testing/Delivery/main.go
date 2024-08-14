@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 	"testing-api/Delivery/router"
 	"testing-api/database"
 	"time"
@@ -14,8 +13,7 @@ import (
 
 func main() {
 	r := gin.Default()
-	dbUri := os.Getenv("MONGODB_URL")
-	clnt, err := database.NewConnection(context.TODO(), dbUri)
+	clnt, err := database.NewMongoClient(context.TODO())
 	if err != nil {
 		log.Fatal(err)
 	}

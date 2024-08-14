@@ -2,37 +2,61 @@ package repository
 
 import (
 	"context"
-	"log"
-	"os"
 	"testing"
-	domain "testing-api/Domain"
-	"testing-api/database"
 
-	_ "github.com/joho/godotenv/autoload"
+	domain "testing-api/Domain"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"go.mongodb.org/mongo-driver/bson"
+	mongoMocks "github.com/sv-tools/mongoifc/mocks/mockery"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserRepositoryTestSuite struct {
 	suite.Suite
 	repository domain.UserRepository
-	db         *mongo.Database
+	mockCol    *mongoMocks.Collection
+	mockDb     *mongoMocks.Database
 	data       []domain.User
 }
 
 func (suite *UserRepositoryTestSuite) SetupSuite() {
-	dbUri := os.Getenv("MONGODB_URL")
-	clnt, err := database.NewConnection(context.TODO(), dbUri)
-	if err != nil {
-		log.Fatal(err)
-	}
-	db := clnt.Database("task_management_api_test")
-	suite.repository = NewUserService(context.TODO(), db)
-	suite.db = db
-	db.Collection(domain.UserCollection).DeleteMany(context.TODO(), bson.D{{}}, options.Delete())
+	suite.mockCol = new(mongoMocks.Collection)
+	suite.mockDb = new(mongoMocks.Database)
+
+	suite.mockCol.On("InsertOne", context.Background(), mock.Anything).Return(
+		&mongo.InsertOneResult{
+			InsertedID: primitive.NewObjectID(),
+		},
+		nil,
+	).Once()
+
+	suite.mockCol.On("Find", context.Background(), mock.Anything).Return(
+		new(mongoMocks.Cursor),
+		nil,
+	).Once()
+
+	suite.mockCol.On("UpdateOne", context.Background(), mock.Anything, mock.Anything).Return(
+		&mongo.UpdateResult{
+			MatchedCount:  1,
+			ModifiedCount: 1,
+		},
+		nil,
+	).Once()
+
+	suite.mockCol.On("DeleteOne", context.Background(), mock.Anything).Return(
+		&mongo.DeleteResult{
+			DeletedCount: 1,
+		},
+		nil,
+	).Once()
+
+	suite.mockDb.On("Collection", domain.UserCollection).Return(suite.mockCol)
+
+	suite.repository = NewUserService(context.TODO(), suite.mockDb)
+
 	suite.data = []domain.User{
 		{
 			Name:     "John Doe",
@@ -58,23 +82,21 @@ func (suite *UserRepositoryTestSuite) SetupSuite() {
 }
 
 func (suite *UserRepositoryTestSuite) TearDownSuite() {
-	collection := suite.db.Collection(domain.UserCollection)
-	collection.DeleteMany(context.TODO(), bson.D{{}}, options.Delete())
-	suite.db.Drop(context.TODO())
-	suite.db.Client().Disconnect(context.TODO())
+	suite.mockCol.AssertExpectations(suite.T())
+	suite.mockDb.AssertExpectations(suite.T())
 }
 
 func (suite *UserRepositoryTestSuite) TestCreate() {
 	assert := assert.New(suite.T())
-	for i, t := range suite.data {
-		created, err := suite.repository.Create(context.TODO(), t)
+	for i, u := range suite.data {
+		created, err := suite.repository.Create(context.TODO(), u)
 		assert.NoError(err)
 		if i == 0 {
-			assert.True(created.IsAdmin, "expected for the first user to be and admin")
+			assert.True(created.IsAdmin, "expected for the first user to be an admin")
 		}
-		assert.Equal(created.Name, t.Name)
-		assert.Equal(created.Email, t.Email)
-		assert.Equal(created.Password, t.Password)
+		assert.Equal(created.Name, u.Name)
+		assert.Equal(created.Email, u.Email)
+		assert.Equal(created.Password, u.Password)
 		suite.data[i] = *created
 	}
 }

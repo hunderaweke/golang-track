@@ -7,19 +7,19 @@ import (
 	domain "testing-api/Domain"
 	"time"
 
+	"github.com/sv-tools/mongoifc"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var TaskNotFoundError = errors.New("task not found")
 
 type TasksRepository struct {
-	collection *mongo.Collection
+	collection mongoifc.Collection
 }
 
-func NewTaskService(c context.Context, db *mongo.Database) domain.TaskRepository {
+func NewTaskService(c context.Context, db mongoifc.Database) domain.TaskRepository {
 	collection := db.Collection(domain.TaskCollection)
 	return &TasksRepository{collection: collection}
 }

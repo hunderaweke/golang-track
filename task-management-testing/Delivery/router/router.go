@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/sv-tools/mongoifc"
 )
 
 type taskRouter struct {
@@ -19,12 +19,12 @@ type userRouter struct {
 	controller controllers.UserController
 }
 
-func SetupRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, ctx context.Context) {
+func SetupRouter(r *gin.Engine, db mongoifc.Database, timeOut time.Duration, ctx context.Context) {
 	AddTaskRouter(r, db, timeOut, ctx)
 	AddUserRouter(r, db, timeOut, ctx)
 }
 
-func NewTaskRouter(c context.Context, db *mongo.Database, timeOut time.Duration) taskRouter {
+func NewTaskRouter(c context.Context, db mongoifc.Database, timeOut time.Duration) taskRouter {
 	taskRepository := repository.NewTaskService(c, db)
 	taskUsecase := usecases.NewTaskUseCase(taskRepository, timeOut, c)
 	taskController := controllers.NewTaskController(taskUsecase)
@@ -33,7 +33,7 @@ func NewTaskRouter(c context.Context, db *mongo.Database, timeOut time.Duration)
 	}
 }
 
-func NewUserRouter(c context.Context, db *mongo.Database, timeOut time.Duration) userRouter {
+func NewUserRouter(c context.Context, db mongoifc.Database, timeOut time.Duration) userRouter {
 	userRepository := repository.NewUserService(c, db)
 	userUsecase := usecases.NewUserUsecase(userRepository, timeOut, c)
 	userController := controllers.NewUserController(userUsecase)
@@ -42,7 +42,7 @@ func NewUserRouter(c context.Context, db *mongo.Database, timeOut time.Duration)
 	}
 }
 
-func AddTaskRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, c context.Context) {
+func AddTaskRouter(r *gin.Engine, db mongoifc.Database, timeOut time.Duration, c context.Context) {
 	t := NewTaskRouter(c, db, timeOut)
 	tasksGroup := r.Group("/tasks")
 	tasksGroup.Use(infrastructure.JWTMiddleware())
@@ -55,7 +55,7 @@ func AddTaskRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, c c
 	}
 }
 
-func AddUserRouter(r *gin.Engine, db *mongo.Database, timeOut time.Duration, c context.Context) {
+func AddUserRouter(r *gin.Engine, db mongoifc.Database, timeOut time.Duration, c context.Context) {
 	u := NewUserRouter(c, db, timeOut)
 	admin := r.Group("/users/")
 	admin.Use(infrastructure.JWTMiddleware())
